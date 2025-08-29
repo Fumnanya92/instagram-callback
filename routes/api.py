@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 import os
 import httpx
 from storage import save_token, load_token, clear_token
+import json
 
 router = APIRouter()
 
@@ -133,3 +134,54 @@ def delete_token():
     """Clear stored token (testing/admin)."""
     clear_token()
     return {"cleared": True}
+
+
+@router.get("/debug/oauth")
+def debug_oauth():
+    """Return masked OAuth env values and simple validity checks (safe for logs).
+
+    This endpoint intentionally masks sensitive values. Use this to confirm
+    that the deployed process sees the expected env vars.
+    """
+    def mask(s: str):
+        if not s:
+            return None
+        s = str(s)
+        if len(s) <= 6:
+            return "***"
+        return s[:3] + "..." + s[-3:]
+
+    fb_app = os.getenv("FACEBOOK_APP_ID") or os.getenv("INSTAGRAM_CLIENT_ID")
+    redirect = os.getenv("INSTAGRAM_REDIRECT_URI")
+
+    return {
+        "facebook_app_id_masked": mask(fb_app),
+        "facebook_app_id_present": bool(fb_app),
+        "redirect_uri": redirect,
+    }
+
+
+@router.get("/token/inspect")
+def inspect_token():
+    """Inspect the stored access token using Facebook's debug_token endpoint.
+
+    Returns the debug_token payload. Requires INSTAGRAM_CLIENT_SECRET to be set
+    so we can build an app access token (app_id|app_secret).
+    """
+    token = load_token() or os.getenv('INSTAGRAM_ACCESS_TOKEN')
+    if not token:
+        return JSONResponse({"error": "no_token"}, status_code=400)
+
+    app_id = os.getenv("FACEBOOK_APP_ID") or os.getenv("INSTAGRAM_CLIENT_ID")
+    app_secret = os.getenv("INSTAGRAM_CLIENT_SECRET")
+    if not (app_id and app_secret):
+        return JSONResponse({"error": "app_credentials_missing"}, status_code=500)
+
+    app_access = f"{app_id}|{app_secret}"
+    url = "https://graph.facebook.com/debug_token"
+    params = {"input_token": token, "access_token": app_access}
+    r = httpx.get(url, params=params, timeout=10)
+    try:
+        return JSONResponse(r.json(), status_code=r.status_code)
+    except Exception:
+        return JSONResponse({"error": "debug_failed"}, status_code=500)
