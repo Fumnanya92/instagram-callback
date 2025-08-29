@@ -1,13 +1,88 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
+import os
+import requests
 
 app = FastAPI()
 
 
 @app.get("/")
 async def root():
-    """Simple health check for Render and Uptime monitors."""
-    return {"message": "Instagram Callback Service is running 🚀"}
+        """Welcome page for reviewers and users. Fetches profile via JS after auth."""
+        return HTMLResponse("""
+        <!doctype html>
+        <html>
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width,initial-scale=1" />
+                <title>Grace — Instagram Callback</title>
+                <style>
+                    :root{--bg:#0f172a;--card:#0b1220;--accent:#7c3aed;--muted:#94a3b8}
+                    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#071027 0%, #071733 100%);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center}
+                    .card{width:980px;max-width:95%;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:14px;padding:28px;box-shadow:0 10px 30px rgba(2,6,23,0.6);display:flex;gap:24px;align-items:center}
+                    .brand{flex:1}
+                    .brand h1{margin:0;font-size:28px;letter-spacing: -0.02em}
+                    .brand p{color:var(--muted);margin-top:8px}
+                    .actions{display:flex;flex-direction:column;gap:12px;align-items:flex-end}
+                    .btn{background:var(--accent);color:white;padding:10px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+                    .profile{display:flex;gap:16px;align-items:center}
+                    .avatar{width:72px;height:72px;border-radius:999px;background:#fff;overflow:hidden;flex-shrink:0}
+                    .meta p{margin:0}
+                    .muted{color:var(--muted)}
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="brand">
+                        <h1>Grace — AI Virtual Business Assistant</h1>
+                        <p class="muted">Minimal reviewer UI — shows Instagram username, profile picture and account id after login.</p>
+                        <div style="margin-top:16px;display:flex;gap:12px;align-items:center">
+                            <button class="btn" onclick="location.href='/login'">Start Login</button>
+                            <a class="muted" href="/privacy" style="text-decoration:none;color:inherit">Privacy</a>
+                            <a class="muted" href="/terms" style="text-decoration:none;color:inherit;margin-left:8px">Terms</a>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <div id="profileBox" style="min-width:260px;display:none" class="profile card-right">
+                            <div class="avatar"><img id="avatar" src="" alt="avatar" style="width:100%;height:100%;object-fit:cover"/></div>
+                            <div class="meta">
+                                <p id="username"><strong>Username</strong></p>
+                                <p id="acctid" class="muted">ID</p>
+                                <p id="type" class="muted">Type</p>
+                            </div>
+                        </div>
+                        <div id="status" class="muted">Not logged in</div>
+                    </div>
+                </div>
+
+                <script>
+                    async function fetchProfile(){
+                        try{
+                            const res = await fetch('/instagram/profile');
+                            if(!res.ok) throw new Error('no-profile');
+                            const data = await res.json();
+                            document.getElementById('avatar').src = data.profile_picture_url || '';
+                            document.getElementById('username').innerHTML = '<strong>@'+(data.username||'')+'</strong>';
+                            document.getElementById('acctid').textContent = 'ID: ' + (data.id||'');
+                            document.getElementById('type').textContent = 'Type: ' + (data.account_type||'');
+                            document.getElementById('profileBox').style.display = 'flex';
+                            document.getElementById('status').textContent = 'Logged in — profile loaded';
+                        }catch(e){
+                            document.getElementById('status').textContent = 'No active session — please complete Instagram login in your app.';
+                        }
+                    }
+                    // try to fetch on load
+                    fetchProfile();
+                </script>
+            </body>
+        </html>
+        """)
+
+
+@app.get("/health")
+async def health():
+        return JSONResponse({"status": "ok", "service": "instagram-callback"})
 
 
 @app.get("/callback")
