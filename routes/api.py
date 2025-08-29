@@ -92,6 +92,15 @@ async def auth_callback(request: Request):
     return response
 
 
+@router.get("/instagram/callback")
+async def instagram_callback(request: Request):
+    """Compatibility wrapper: some deployments use /instagram/callback as the
+    redirect URI. Reuse the existing auth_callback implementation to avoid
+    duplicating the exchange logic.
+    """
+    return await auth_callback(request)
+
+
 @router.get("/delete-data")
 async def delete_data():
     return {"message": "ok"}
