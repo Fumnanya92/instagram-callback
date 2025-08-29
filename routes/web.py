@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import os
 
-from utils.oauth import build_auth_url
+from utils.oauth import build_auth_url, generate_state
 
 router = APIRouter()
 
@@ -35,12 +35,17 @@ async def login_redirect(request: Request):
     """
     client_id = os.getenv("INSTAGRAM_CLIENT_ID")
     redirect_uri = os.getenv("INSTAGRAM_REDIRECT_URI")
-    scope = os.getenv("INSTAGRAM_OAUTH_SCOPE", "user_profile")
+    scope = os.getenv("INSTAGRAM_OAUTH_SCOPE", "instagram_business_basic,instagram_business_manage_messages")
     if not client_id or not redirect_uri:
         # show a small page telling the reviewer that login isn't configured
         return HTMLResponse(f"<html><body><h3>Login not configured</h3><p>Set INSTAGRAM_CLIENT_ID and INSTAGRAM_REDIRECT_URI in environment.</p></body></html>")
 
     # Build the OAuth URL (centralized helper)
-    auth_url = build_auth_url()
+    # generate CSRF state and store it in a secure cookie
+    state = generate_state()
+    auth_url = build_auth_url(state=state)
     print(f"Generated auth_url: {auth_url}")
-    return RedirectResponse(auth_url)
+    response = RedirectResponse(auth_url)
+    # set cookie for later validation in /auth/callback; secure flag depends on deployment
+    response.set_cookie("oauth_state", state, httponly=True, secure=True, samesite="lax")
+    return response
