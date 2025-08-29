@@ -45,4 +45,6 @@ async def login_redirect(request: Request):
         f"&scope={scope}"
         "&response_type=code"
     )
+    # Log the full auth URL so we can inspect exact redirect_uri being sent
+    print(f"Generated auth_url: {auth_url}")
     return RedirectResponse(auth_url)
