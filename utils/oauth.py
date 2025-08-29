@@ -18,7 +18,13 @@ def build_auth_url(
     # For Instagram Business / Graph flows we must use the Facebook App ID
     client_id = client_id or os.getenv("FACEBOOK_APP_ID")
     redirect_uri = redirect_uri or os.getenv("INSTAGRAM_REDIRECT_URI")
-    scope = scope or os.getenv("INSTAGRAM_OAUTH_SCOPE", "instagram_business_basic,instagram_business_manage_messages")
+    # Use the Instagram Graph / Facebook Login permissions. The old
+    # 'instagram_business_*' names are invalid in the Login dialog.
+    # Common permissions needed for Instagram Business + messaging:
+    # - instagram_basic
+    # - instagram_manage_messages
+    # - pages_show_list (to list pages connected to the user)
+    scope = scope or os.getenv("INSTAGRAM_OAUTH_SCOPE", "instagram_basic,instagram_manage_messages,pages_show_list")
 
     params = {
         "client_id": client_id,
