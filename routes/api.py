@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 import os
-import requests
+import httpx
 from storage import save_token, load_token, clear_token
 
 router = APIRouter()
@@ -41,23 +41,94 @@ async def instagram_callback(request: Request):
                 "redirect_uri": redirect_uri,
                 "code": code,
             }
-            r = requests.post(token_url, data=data, timeout=10)
+            async with httpx.AsyncClient(timeout=10) as client:
+                r = await client.post(token_url, data=data)
             if r.status_code == 200:
                 body = r.json()
-                token = body.get("access_token") or body.get("access_token")
+                token = body.get("access_token")
                 if token:
                     save_token(token)
                     return {"status": "success", "stored": True}
-            return JSONResponse(r.json(), status_code=r.status_code)
+            try:
+                return JSONResponse(r.json(), status_code=r.status_code)
+            except Exception:
+                return JSONResponse({"error": "token_exchange_failed"}, status_code=500)
 
     return {"status": "success", "params": params}
 
 
 @router.get("/auth/callback")
 async def auth_callback(request: Request):
+    """Handle Instagram OAuth redirect with ?code=.
+
+    Exchanges the code for a short-lived token, exchanges that for a long-lived
+    token, saves the long-lived token via save_token(), then redirects to `/`.
+    """
     params = dict(request.query_params)
     print("Auth callback params:", params)
-    return {"status": "success", "params": params}
+
+    code = params.get("code")
+    if not code:
+        return JSONResponse({"error": "missing_code", "params": params}, status_code=400)
+
+    client_id = os.getenv("INSTAGRAM_CLIENT_ID")
+    client_secret = os.getenv("INSTAGRAM_CLIENT_SECRET")
+    redirect_uri = os.getenv("INSTAGRAM_REDIRECT_URI")
+    if not (client_id and client_secret and redirect_uri):
+        return JSONResponse({"error": "oauth_not_configured"}, status_code=500)
+
+    # Exchange code for short-lived token
+    token_url = "https://api.instagram.com/oauth/access_token"
+    data = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "authorization_code",
+        "redirect_uri": redirect_uri,
+        "code": code,
+    }
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        r = await client.post(token_url, data=data)
+
+    if r.status_code != 200:
+        # propagate Instagram's error to the caller (useful during review)
+        try:
+            return JSONResponse(r.json(), status_code=r.status_code)
+        except Exception:
+            return JSONResponse({"error": "token_exchange_failed", "status_code": r.status_code}, status_code=500)
+
+    body = r.json()
+    short_lived = body.get("access_token")
+    if not short_lived:
+        return JSONResponse({"error": "no_access_token_in_response", "body": body}, status_code=500)
+
+    # Exchange short-lived token for long-lived token
+    exchange_url = "https://graph.instagram.com/access_token"
+    params2 = {
+        "grant_type": "ig_exchange_token",
+        "client_secret": client_secret,
+        "access_token": short_lived,
+    }
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        r2 = await client.get(exchange_url, params=params2)
+
+    if r2.status_code != 200:
+        try:
+            return JSONResponse(r2.json(), status_code=r2.status_code)
+        except Exception:
+            return JSONResponse({"error": "long_token_exchange_failed", "status_code": r2.status_code}, status_code=500)
+
+    body2 = r2.json()
+    long_lived = body2.get("access_token")
+    if not long_lived:
+        return JSONResponse({"error": "no_long_lived_token", "body": body2}, status_code=500)
+
+    # persist token for reviewer/demo flow
+    save_token(long_lived)
+
+    # redirect reviewer back to the homepage where frontend will call /instagram/profile
+    return RedirectResponse(url="/")
 
 
 @router.get("/delete-data")
@@ -81,7 +152,22 @@ def get_instagram_profile():
         "fields": "id,username,account_type,profile_picture_url",
         "access_token": token,
     }
-    r = requests.get(url, params=params, timeout=10)
+    # Use httpx (imported above) instead of requests to keep async/http clients consistent
+    r = httpx.get(url, params=params, timeout=10)
     if r.status_code != 200:
         raise HTTPException(status_code=400, detail=r.json())
     return JSONResponse(r.json())
+
+
+@router.get("/token")
+def view_token():
+    """Return whether a token is stored (for testing only)."""
+    token = load_token()
+    return {"stored": bool(token)}
+
+
+@router.delete("/token")
+def delete_token():
+    """Clear stored token (testing/admin)."""
+    clear_token()
+    return {"cleared": True}
