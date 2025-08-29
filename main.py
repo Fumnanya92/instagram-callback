@@ -26,3 +26,26 @@ async def instagram_callback(request: Request):
     # log to stdout so Render will capture it
     print("Instagram callback params:", params)
     return {"status": "success", "params": params}
+
+
+@app.get("/auth/callback")
+async def auth_callback(request: Request):
+    """Compatibility route for deployments that use /auth/callback.
+
+    Mirrors the behaviour of `/instagram/callback` and logs the query params.
+    """
+    params = dict(request.query_params)
+    print("Auth callback params:", params)
+    return {"status": "success", "params": params}
+
+
+@app.get("/delete-data")
+async def delete_data():
+    """Endpoint required by Meta for data deletion verification."""
+    return {"message": "ok"}
+
+
+@app.get("/deauthorize")
+async def deauthorize():
+    """Endpoint required by Meta for deauthorization callbacks."""
+    return {"message": "ok"}
