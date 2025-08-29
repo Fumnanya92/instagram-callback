@@ -171,3 +171,63 @@ def delete_token():
     """Clear stored token (testing/admin)."""
     clear_token()
     return {"cleared": True}
+
+
+@router.get("/debug/oauth")
+def debug_oauth():
+    """Return masked OAuth env values and simple validity checks for debugging."""
+    client_id = os.getenv("INSTAGRAM_CLIENT_ID")
+    redirect_uri = os.getenv("INSTAGRAM_REDIRECT_URI")
+    scope = os.getenv("INSTAGRAM_OAUTH_SCOPE")
+
+    def mask(s: str) -> str:
+        if not s:
+            return ""
+        if len(s) <= 8:
+            return s[0] + "*" * (len(s) - 2) + s[-1]
+        return s[:4] + "*" * (len(s) - 8) + s[-4:]
+
+    info = {
+        "client_id_provided": bool(client_id),
+        "client_id_masked": mask(client_id) if client_id else None,
+        "client_id_length": len(client_id) if client_id else 0,
+        "client_id_numeric": client_id.isdigit() if client_id else False,
+        "redirect_uri": redirect_uri,
+        "scope": scope,
+    }
+    return JSONResponse(info)
+
+
+@router.get("/debug/oauth")
+def debug_oauth():
+    """Return masked OAuth env values and simple validity checks to help debug Invalid App ID errors.
+
+    Note: This intentionally masks most of the client_id to avoid exposing secrets in logs.
+    """
+    client_id = os.getenv("INSTAGRAM_CLIENT_ID") or os.getenv("FACEBOOK_APP_ID")
+    redirect_uri = os.getenv("INSTAGRAM_REDIRECT_URI")
+
+    def mask(s: str):
+        if not s:
+            return None
+        if len(s) <= 6:
+            return "***"
+        return s[:3] + "..." + s[-3:]
+
+    client_id_masked = mask(client_id) if client_id else None
+    client_id_valid = False
+    if client_id and client_id.isdigit() and len(client_id) >= 5:
+        client_id_valid = True
+
+    redirect_uri_valid = False
+    if redirect_uri and (redirect_uri.startswith("https://") or redirect_uri.startswith("http://")):
+        redirect_uri_valid = True
+
+    return {
+        "client_id_masked": client_id_masked,
+        "client_id_present": bool(client_id),
+        "client_id_valid_format": client_id_valid,
+        "redirect_uri": redirect_uri,
+        "redirect_uri_valid_format": redirect_uri_valid,
+        "note": "If client_id_present is true but client_id_valid_format is false, the app id may be malformed. Ensure the Facebook App ID (numeric) is set in INSTAGRAM_CLIENT_ID on Render."
+    }
