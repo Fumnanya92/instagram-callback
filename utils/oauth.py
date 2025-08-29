@@ -20,11 +20,10 @@ def build_auth_url(
     redirect_uri = redirect_uri or os.getenv("INSTAGRAM_REDIRECT_URI")
     # Use the Instagram Graph / Facebook Login permissions. The old
     # 'instagram_business_*' names are invalid in the Login dialog.
-    # Common permissions needed for Instagram Business + messaging:
+    # Start with the minimal scopes required for the reviewer flow:
     # - instagram_basic
-    # - instagram_manage_messages
     # - pages_show_list (to list pages connected to the user)
-    scope = scope or os.getenv("INSTAGRAM_OAUTH_SCOPE", "instagram_basic,instagram_manage_messages,pages_show_list")
+    scope = scope or os.getenv("INSTAGRAM_OAUTH_SCOPE", "instagram_basic,pages_show_list")
 
     params = {
         "client_id": client_id,
