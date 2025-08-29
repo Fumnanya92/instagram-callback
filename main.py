@@ -15,9 +15,13 @@ if os.path.exists('.env'):
 
 from routes.web import router as web_router
 from routes.api import router as api_router
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
 # include routers
 app.include_router(api_router)
 app.include_router(web_router)
+
+# Serve static assets from /static
+app.mount("/static", StaticFiles(directory="static"), name="static")
