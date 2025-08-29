@@ -2,7 +2,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import os
-import urllib.parse
+
+from utils.oauth import build_auth_url
 
 router = APIRouter()
 
@@ -39,14 +40,7 @@ async def login_redirect(request: Request):
         # show a small page telling the reviewer that login isn't configured
         return HTMLResponse(f"<html><body><h3>Login not configured</h3><p>Set INSTAGRAM_CLIENT_ID and INSTAGRAM_REDIRECT_URI in environment.</p></body></html>")
 
-    # Build the OAuth URL using Facebook's dialog (Instagram Graph requires Facebook Login)
-    params = {
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "scope": scope,
-        "response_type": "code",
-    }
-    auth_url = "https://www.facebook.com/v19.0/dialog/oauth?" + urllib.parse.urlencode(params)
-    # Log the full auth URL so we can inspect exact redirect_uri being sent
+    # Build the OAuth URL (centralized helper)
+    auth_url = build_auth_url()
     print(f"Generated auth_url: {auth_url}")
     return RedirectResponse(auth_url)
