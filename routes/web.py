@@ -13,7 +13,11 @@ templates = Jinja2Templates(directory="templates")
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     # The frontend will call /instagram/profile to populate reviewer info
-    return templates.TemplateResponse("welcome.html", {"request": request})
+    # ensure a CSRF token is set as a cookie for double-submit validation
+    csrf = generate_state(16)
+    response = templates.TemplateResponse("welcome.html", {"request": request})
+    response.set_cookie("csrf_token", csrf, httponly=False, secure=True, samesite='lax')
+    return response
 
 
 @router.get("/privacy", response_class=HTMLResponse)

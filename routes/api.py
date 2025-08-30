@@ -4,8 +4,51 @@ import os
 import httpx
 from storage import save_token, load_token, clear_token
 import json
+import datetime
+from pathlib import Path
 
 router = APIRouter()
+
+
+async def revoke_permissions_and_audit(token: str):
+    """Revoke Graph API permissions for a token and append an audit entry.
+
+    Returns (revoked: bool, response_body)
+    """
+    revoked = False
+    response_body = None
+    try:
+        url = "https://graph.facebook.com/v23.0/me/permissions"
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.delete(url, params={"access_token": token})
+        try:
+            response_body = r.json()
+        except Exception:
+            response_body = r.text
+        if r.status_code == 200:
+            revoked = True
+        print(f"Revoke response status={r.status_code} body={response_body}")
+    except Exception as e:
+        response_body = {"error": "request_failed", "detail": str(e)}
+        print(f"Revoke request failed: {e}")
+
+    # Append audit to file (best-effort)
+    try:
+        audit_dir = Path(__file__).resolve().parent.parent / "data"
+        audit_dir.mkdir(parents=True, exist_ok=True)
+        audit_path = audit_dir / "revoke.log"
+        log = {
+            "ts": datetime.datetime.utcnow().isoformat() + "Z",
+            "action": "revoke_permissions",
+            "revoked": revoked,
+            "response": response_body,
+        }
+        with audit_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(log) + "\n")
+    except Exception as e:
+        print(f"Failed to write revoke audit log: {e}")
+
+    return revoked, response_body
 
 
 @router.get("/auth/callback")
@@ -184,6 +227,34 @@ def delete_token():
     """Clear stored token (testing/admin)."""
     clear_token()
     return {"cleared": True}
+
+
+@router.delete("/instagram/disconnect")
+async def instagram_disconnect(request: Request):
+    """Revoke app permissions for the current user and clear stored token.
+
+    This attempts to call the Graph API DELETE /me/permissions using the stored
+    user access token to immediately revoke permissions. Regardless of the
+    upstream result, the local token is cleared so the app returns to a
+    neutral state.
+    """
+    # CSRF protection: double-submit cookie token. Require X-CSRF-Token header
+    cookie_csrf = request.cookies.get("csrf_token")
+    header_csrf = request.headers.get("x-csrf-token")
+    if not cookie_csrf or not header_csrf or cookie_csrf != header_csrf:
+        return JSONResponse({"error": "invalid_csrf"}, status_code=403)
+
+    token = load_token() or os.getenv('INSTAGRAM_ACCESS_TOKEN')
+    if not token:
+        return JSONResponse({"error": "no_token"}, status_code=400)
+
+    # centralize revoke+audit logic
+    revoked, response_body = await revoke_permissions_and_audit(token)
+
+    # Clear local token either way so UI returns to neutral state
+    clear_token()
+
+    return JSONResponse({"revoked": revoked, "response": response_body})
 
 
 @router.get("/token/content")
