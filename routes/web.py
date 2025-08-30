@@ -35,12 +35,14 @@ async def login_redirect(request: Request):
     """
     client_id = os.getenv("INSTAGRAM_CLIENT_ID")
     redirect_uri = os.getenv("INSTAGRAM_REDIRECT_URI")
-    scope = os.getenv("INSTAGRAM_OAUTH_SCOPE", "instagram_business_basic,instagram_business_manage_messages")
     if not client_id or not redirect_uri:
         # show a small page telling the reviewer that login isn't configured
         return HTMLResponse(f"<html><body><h3>Login not configured</h3><p>Set INSTAGRAM_CLIENT_ID and INSTAGRAM_REDIRECT_URI in environment.</p></body></html>")
 
-    # Build the OAuth URL (centralized helper)
+    # Build the OAuth URL (centralized helper). The helper reads
+    # `INSTAGRAM_OAUTH_SCOPE` from environment and provides a safe
+    # default; avoid duplicating scope defaults here to prevent
+    # conflicting/invalid permission names.
     # generate CSRF state and store it in a secure cookie
     state = generate_state()
     auth_url = build_auth_url(state=state)
