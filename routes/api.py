@@ -118,18 +118,50 @@ def get_instagram_profile():
     token = load_token() or os.getenv('INSTAGRAM_ACCESS_TOKEN')
     if not token:
         raise HTTPException(status_code=401, detail="No access token configured")
+    # Strategy:
+    # 1) Call /me/accounts?fields=instagram_business_account to find any connected
+    #    Instagram Business accounts via the user's Pages.
+    # 2) If found, fetch the Instagram account by id with the desired fields.
+    # 3) Fall back to a direct /me fields call as a last resort.
 
-    # Use Facebook Graph to fetch the connected Instagram Business account info
-    url = "https://graph.facebook.com/v23.0/me"
-    params = {
-        "fields": "id,username,account_type,profile_picture_url",
-        "access_token": token,
-    }
-
-    r = httpx.get(url, params=params, timeout=10)
+    pages_url = "https://graph.facebook.com/v23.0/me/accounts"
+    params_pages = {"fields": "instagram_business_account", "access_token": token}
+    r = httpx.get(pages_url, params=params_pages, timeout=10)
     if r.status_code != 200:
-        raise HTTPException(status_code=400, detail=r.json())
-    return JSONResponse(r.json())
+        # Return the upstream error to help debugging
+        try:
+            detail = r.json()
+        except Exception:
+            detail = {"error": "accounts_fetch_failed", "status_code": r.status_code}
+        raise HTTPException(status_code=400, detail=detail)
+
+    pages_body = r.json()
+    for page in pages_body.get("data", []):
+        ig = page.get("instagram_business_account")
+        if ig and ig.get("id"):
+            ig_id = ig["id"]
+            profile_url = f"https://graph.facebook.com/v23.0/{ig_id}"
+            params_profile = {"fields": "id,username,account_type,profile_picture_url", "access_token": token}
+            r2 = httpx.get(profile_url, params=params_profile, timeout=10)
+            if r2.status_code != 200:
+                try:
+                    return JSONResponse(r2.json(), status_code=r2.status_code)
+                except Exception:
+                    raise HTTPException(status_code=400, detail={"error": "instagram_profile_fetch_failed", "status_code": r2.status_code})
+            return JSONResponse(r2.json())
+
+    # Fallback: try direct /me fields (may work for non-business IG tokens)
+    fallback_url = "https://graph.facebook.com/v23.0/me"
+    params_fallback = {"fields": "id,username,account_type,profile_picture_url", "access_token": token}
+    r3 = httpx.get(fallback_url, params=params_fallback, timeout=10)
+    if r3.status_code == 200:
+        return JSONResponse(r3.json())
+
+    # No IG account found; return helpful debug info
+    raise HTTPException(status_code=400, detail={
+        "error": "no_instagram_business_account_found",
+        "pages": pages_body.get("data", []),
+    })
 
 
 @router.get("/token")
