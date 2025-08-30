@@ -162,10 +162,14 @@ def debug_oauth():
 
     fb_app = os.getenv("FACEBOOK_APP_ID") or os.getenv("INSTAGRAM_CLIENT_ID")
     redirect = os.getenv("INSTAGRAM_REDIRECT_URI")
+    client_secret_present = bool(os.getenv("INSTAGRAM_CLIENT_SECRET"))
+    instagram_client_id_present = bool(os.getenv("INSTAGRAM_CLIENT_ID") or os.getenv("FACEBOOK_APP_ID"))
 
     return {
         "facebook_app_id_masked": mask(fb_app),
         "facebook_app_id_present": bool(fb_app),
+        "instagram_client_id_present": instagram_client_id_present,
+        "client_secret_present": client_secret_present,
         "redirect_uri": redirect,
     }
 
