@@ -48,6 +48,7 @@ async def auth_callback(request: Request):
 
     async with httpx.AsyncClient(timeout=10) as client:
         r = await client.get(short_lived_url, params=params_exchange)
+    print(f"Short-lived exchange status: {r.status_code} body: {getattr(r, 'text', None)}")
 
     if r.status_code != 200:
         try:
@@ -71,6 +72,7 @@ async def auth_callback(request: Request):
 
     async with httpx.AsyncClient(timeout=10) as client:
         r2 = await client.get(long_lived_url, params=exchange_params)
+    print(f"Long-lived exchange status: {r2.status_code} body: {getattr(r2, 'text', None)}")
 
     if r2.status_code != 200:
         try:
@@ -116,6 +118,7 @@ async def deauthorize():
 def get_instagram_profile():
     # Load token from storage first, fall back to env var
     token = load_token() or os.getenv('INSTAGRAM_ACCESS_TOKEN')
+    print(f"Loaded token present: {bool(token)}")
     if not token:
         raise HTTPException(status_code=401, detail="No access token configured")
     # Strategy:
@@ -141,8 +144,12 @@ def get_instagram_profile():
         if ig and ig.get("id"):
             ig_id = ig["id"]
             profile_url = f"https://graph.facebook.com/v23.0/{ig_id}"
-            params_profile = {"fields": "id,username,account_type,profile_picture_url", "access_token": token}
+            # account_type is not available on IGUser nodes in some API versions;
+            # avoid requesting it to prevent (#100) errors. Request the common
+            # fields that are usually present on IGUser nodes.
+            params_profile = {"fields": "id,username,profile_picture_url", "access_token": token}
             r2 = httpx.get(profile_url, params=params_profile, timeout=10)
+            print(f"Profile fetch {profile_url} status: {r2.status_code} body: {r2.text}")
             if r2.status_code != 200:
                 try:
                     return JSONResponse(r2.json(), status_code=r2.status_code)
@@ -152,8 +159,9 @@ def get_instagram_profile():
 
     # Fallback: try direct /me fields (may work for non-business IG tokens)
     fallback_url = "https://graph.facebook.com/v23.0/me"
-    params_fallback = {"fields": "id,username,account_type,profile_picture_url", "access_token": token}
+    params_fallback = {"fields": "id,username,profile_picture_url", "access_token": token}
     r3 = httpx.get(fallback_url, params=params_fallback, timeout=10)
+    print(f"Fallback /me fetch status: {r3.status_code} body: {r3.text}")
     if r3.status_code == 200:
         return JSONResponse(r3.json())
 
@@ -176,6 +184,32 @@ def delete_token():
     """Clear stored token (testing/admin)."""
     clear_token()
     return {"cleared": True}
+
+
+@router.get("/token/content")
+def token_content(raw: bool = False):
+    """Return the stored token in masked form.
+
+    By default this returns a masked token to avoid accidental leakage.
+    To retrieve the raw token set the environment variable `ALLOW_TOKEN_INSPECT=1`
+    and call with `?raw=1` (only for local debugging).
+    """
+    token = load_token()
+    if not token:
+        return JSONResponse({"token_present": False}, status_code=404)
+
+    def mask(s: str) -> str:
+        if not s:
+            return ""
+        if len(s) <= 8:
+            return "****"
+        return f"{s[:4]}...{s[-4:]}"
+
+    allow_raw = os.getenv("ALLOW_TOKEN_INSPECT") == "1"
+    if raw and not allow_raw:
+        return JSONResponse({"error": "raw_inspect_not_allowed", "note": "set ALLOW_TOKEN_INSPECT=1 to enable raw token output"}, status_code=403)
+
+    return JSONResponse({"token_present": True, "token": token if (raw and allow_raw) else mask(token)})
 
 
 @router.get("/debug/oauth")

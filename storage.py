@@ -14,7 +14,12 @@ TOKEN_FILE = STORE_PATH / "token.json"
 
 
 def save_token(token: str) -> None:
-    TOKEN_FILE.write_text(json.dumps({"access_token": token}))
+    try:
+        TOKEN_FILE.write_text(json.dumps({"access_token": token}))
+        print(f"Saved access token to {TOKEN_FILE}")
+    except Exception as e:
+        # Don't crash the app on save errors; log for debugging
+        print(f"Failed to save token to {TOKEN_FILE}: {e}")
 
 
 def load_token() -> Optional[str]:
@@ -24,6 +29,7 @@ def load_token() -> Optional[str]:
         data = json.loads(TOKEN_FILE.read_text())
         return data.get("access_token")
     except Exception:
+        print(f"Failed to read token file {TOKEN_FILE}")
         return None
 
 
