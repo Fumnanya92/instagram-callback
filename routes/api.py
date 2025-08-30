@@ -31,7 +31,8 @@ async def auth_callback(request: Request):
         return JSONResponse({"error": "invalid_state"}, status_code=400)
 
     client_id = os.getenv("FACEBOOK_APP_ID") or os.getenv("INSTAGRAM_CLIENT_ID")
-    client_secret = os.getenv("INSTAGRAM_CLIENT_SECRET")
+    # Prefer the Facebook app secret if present; fall back to the Instagram client secret
+    client_secret = os.getenv("FACEBOOK_APP_SECRET") or os.getenv("INSTAGRAM_CLIENT_SECRET")
     redirect_uri = os.getenv("INSTAGRAM_REDIRECT_URI")
     if not (client_id and client_secret and redirect_uri):
         return JSONResponse({"error": "oauth_not_configured"}, status_code=500)
@@ -162,14 +163,20 @@ def debug_oauth():
 
     fb_app = os.getenv("FACEBOOK_APP_ID") or os.getenv("INSTAGRAM_CLIENT_ID")
     redirect = os.getenv("INSTAGRAM_REDIRECT_URI")
-    client_secret_present = bool(os.getenv("INSTAGRAM_CLIENT_SECRET"))
-    instagram_client_id_present = bool(os.getenv("INSTAGRAM_CLIENT_ID") or os.getenv("FACEBOOK_APP_ID"))
+
+    fb_secret = os.getenv("FACEBOOK_APP_SECRET")
+    ig_secret = os.getenv("INSTAGRAM_CLIENT_SECRET")
+    secret_used = None
+    if fb_secret:
+        secret_used = "FACEBOOK_APP_SECRET"
+    elif ig_secret:
+        secret_used = "INSTAGRAM_CLIENT_SECRET"
 
     return {
         "facebook_app_id_masked": mask(fb_app),
         "facebook_app_id_present": bool(fb_app),
-        "instagram_client_id_present": instagram_client_id_present,
-        "client_secret_present": client_secret_present,
+        "secret_used": secret_used,
+        "client_secret_present": bool(fb_secret or ig_secret),
         "redirect_uri": redirect,
     }
 
@@ -186,7 +193,7 @@ def inspect_token():
         return JSONResponse({"error": "no_token"}, status_code=400)
 
     app_id = os.getenv("FACEBOOK_APP_ID") or os.getenv("INSTAGRAM_CLIENT_ID")
-    app_secret = os.getenv("INSTAGRAM_CLIENT_SECRET")
+    app_secret = os.getenv("FACEBOOK_APP_SECRET") or os.getenv("INSTAGRAM_CLIENT_SECRET")
     if not (app_id and app_secret):
         return JSONResponse({"error": "app_credentials_missing"}, status_code=500)
 
