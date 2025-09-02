@@ -1,5 +1,40 @@
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, PlainTextResponse
+"""
+FastAPI routes for Instagram Business integration and webhook messaging.
+
+This module provides a complete Instagram Business integration demo for Meta app review:
+
+1. OAuth Flow:
+   - /auth/instagram - Initiate Instagram Business OAuth
+   - /auth/callback - Handle OAuth callback and token exchange
+   - /instagram/profile - Fetch connected account profile
+   - /instagram/disconnect - Disconnect account with CSRF protection
+
+2. Webhook Messaging (for Meta app review):
+   - GET /webhook - Webhook verification endpoint for Meta
+   - POST /webhook - Receive and process incoming messages
+   - /webhook/logs - View recent webhook events and auto-replies
+   - /webhook/status - Check webhook configuration status
+
+3. Auto-Reply System:
+   - Receives Instagram DMs via webhook
+   - Sends automatic replies via Graph API (when PAGE_ACCESS_TOKEN is configured)
+   - Logs all interactions for reviewer inspection
+   - Gracefully handles permission limitations during review process
+
+Configuration required:
+- INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET (OAuth)
+- PAGE_ACCESS_TOKEN (for sending replies via Graph API)
+- WEBHOOK_VERIFY_TOKEN (for Meta webhook verification)
+
+For Meta app review:
+- Deployed to: https://fynko.space
+- Webhook URL: https://fynko.space/webhook
+- Use /webhook/logs to demonstrate messaging functionality
+- Sample data is seeded for reviewer inspection
+"""
+
 import os
 import httpx
 from storage import save_token, load_token, clear_token
@@ -342,3 +377,210 @@ def inspect_token():
         return JSONResponse(r.json(), status_code=r.status_code)
     except Exception:
         return JSONResponse({"error": "debug_failed"}, status_code=500)
+
+
+@router.get("/webhook")
+async def webhook_verify(request: Request):
+    """Webhook verification for Meta (Instagram/Facebook).
+    
+    Meta sends a GET request with hub.mode=subscribe, hub.challenge, and hub.verify_token.
+    We return the challenge if the verify token matches our configured token.
+    """
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+    
+    verify_token = os.getenv("WEBHOOK_VERIFY_TOKEN", "grace_webhook_token")
+    
+    if mode == "subscribe" and token == verify_token:
+        print(f"Webhook verified successfully with challenge: {challenge}")
+        return PlainTextResponse(challenge)
+    else:
+        print(f"Webhook verification failed. Mode: {mode}, Token match: {token == verify_token}")
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+@router.post("/webhook")
+async def webhook_receive(request: Request):
+    """Receive webhook events from Meta (Instagram/Facebook).
+    
+    This logs incoming messages and sends a static auto-reply for demo purposes.
+    In production, this would integrate with the Grace AI system.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    
+    # Log the webhook event
+    print(f"Webhook received: {json.dumps(body, indent=2)}")
+    
+    # Log to file for reviewer inspection
+    try:
+        webhook_dir = Path(__file__).resolve().parent.parent / "data"
+        webhook_dir.mkdir(parents=True, exist_ok=True)
+        webhook_log = webhook_dir / "webhook.log"
+        
+        log_entry = {
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "event": "webhook_received",
+            "data": body
+        }
+        
+        with webhook_log.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        print(f"Failed to log webhook: {e}")
+    
+    # Process messaging events
+    if "entry" in body:
+        for entry in body["entry"]:
+            if "messaging" in entry:
+                for message_event in entry["messaging"]:
+                    await handle_message_event(message_event)
+    
+    return JSONResponse({"status": "received"})
+
+
+async def send_instagram_reply(sender_id: str, text: str):
+    """Send a reply message via Instagram Graph API.
+    
+    Args:
+        sender_id: The Instagram user ID to send the message to
+        text: The message text to send
+    
+    Returns:
+        bool: True if the message was sent successfully, False otherwise
+    """
+    page_access_token = os.getenv("PAGE_ACCESS_TOKEN")
+    
+    if not page_access_token or page_access_token == "your_page_access_token_here":
+        print("PAGE_ACCESS_TOKEN not configured - reply will only be logged")
+        return False
+    
+    url = "https://graph.facebook.com/v20.0/me/messages"
+    params = {"access_token": page_access_token}
+    payload = {
+        "recipient": {"id": sender_id},
+        "message": {"text": text}
+    }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.post(url, params=params, json=payload, timeout=10)
+            print(f"Reply status: {r.status_code}, response: {r.text}")
+            
+            if r.status_code == 200:
+                print(f"Successfully sent reply to {sender_id}")
+                return True
+            else:
+                print(f"Failed to send reply to {sender_id}: {r.status_code} {r.text}")
+                return False
+                
+    except Exception as e:
+        print(f"Error sending reply to {sender_id}: {e}")
+        return False
+
+
+async def handle_message_event(message_event):
+    """Handle an individual message event and send auto-reply."""
+    sender_id = message_event.get("sender", {}).get("id")
+    message_text = message_event.get("message", {}).get("text", "")
+    
+    if not sender_id or not message_text:
+        print("Skipping message event - missing sender or text")
+        return
+    
+    print(f"Message from {sender_id}: {message_text}")
+    
+    # Send auto-reply (static response for demo)
+    auto_reply = "Hi! This is Grace, your AI sales assistant. Thanks for your message! This is an automated demo response during our Instagram app review. Full conversational AI capabilities will be available soon! 🤖✨"
+    
+    # Try to send the reply via Graph API
+    reply_sent = await send_instagram_reply(sender_id, auto_reply)
+    
+    if reply_sent:
+        print(f"Auto-reply sent to {sender_id}: {auto_reply}")
+        reply_status = "sent_via_api"
+    else:
+        print(f"Auto-reply logged only for {sender_id}: {auto_reply}")
+        reply_status = "logged_only"
+    
+    # Log the auto-reply for reviewer inspection
+    try:
+        webhook_dir = Path(__file__).resolve().parent.parent / "data"
+        reply_log = webhook_dir / "auto_replies.log"
+        
+        reply_entry = {
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "sender_id": sender_id,
+            "incoming_message": message_text,
+            "auto_reply": auto_reply,
+            "status": reply_status
+        }
+        
+        with reply_log.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(reply_entry) + "\n")
+    except Exception as e:
+        print(f"Failed to log auto-reply: {e}")
+
+
+@router.get("/webhook/logs")
+def webhook_logs():
+    """View recent webhook events and auto-replies (for demo/debugging)."""
+    logs = {"webhook_events": [], "auto_replies": []}
+    
+    try:
+        webhook_dir = Path(__file__).resolve().parent.parent / "data"
+        
+        # Read webhook events
+        webhook_log = webhook_dir / "webhook.log"
+        if webhook_log.exists():
+            with webhook_log.open("r", encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        logs["webhook_events"].append(json.loads(line.strip()))
+                    except:
+                        continue
+        
+        # Read auto-replies
+        reply_log = webhook_dir / "auto_replies.log"
+        if reply_log.exists():
+            with reply_log.open("r", encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        logs["auto_replies"].append(json.loads(line.strip()))
+                    except:
+                        continue
+        
+        # Keep only last 50 entries of each type
+        logs["webhook_events"] = logs["webhook_events"][-50:]
+        logs["auto_replies"] = logs["auto_replies"][-50:]
+        
+    except Exception as e:
+        return JSONResponse({"error": f"Failed to read logs: {e}"}, status_code=500)
+    
+    return JSONResponse(logs)
+
+
+@router.get("/webhook/status")
+def webhook_status():
+    """Check webhook configuration status."""
+    page_access_token = os.getenv("PAGE_ACCESS_TOKEN", "")
+    webhook_verify_token = os.getenv("WEBHOOK_VERIFY_TOKEN", "")
+    
+    status = {
+        "webhook_verify_token_configured": bool(webhook_verify_token and webhook_verify_token != "your_webhook_verify_token_here"),
+        "page_access_token_configured": bool(page_access_token and page_access_token != "your_page_access_token_here"),
+        "messaging_enabled": bool(page_access_token and page_access_token != "your_page_access_token_here"),
+        "webhook_url_for_meta_console": "https://fynko.space/webhook",
+        "webhook_verification_endpoint": "GET https://fynko.space/webhook",
+        "webhook_events_endpoint": "POST https://fynko.space/webhook",
+        "current_configuration": {
+            "has_webhook_token": bool(webhook_verify_token),
+            "has_page_token": bool(page_access_token),
+            "ready_for_review": bool(webhook_verify_token and page_access_token)
+        }
+    }
+    
+    return JSONResponse(status)
