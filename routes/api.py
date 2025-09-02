@@ -393,10 +393,16 @@ async def webhook_verify(request: Request):
     verify_token = os.getenv("WEBHOOK_VERIFY_TOKEN", "grace_webhook_token")
     
     if mode == "subscribe" and token == verify_token:
-        print(f"Webhook verified successfully with challenge: {challenge}")
+        print(f"\n🔐 WEBHOOK VERIFICATION SUCCESSFUL")
+        print(f"   🎯 Challenge: {challenge}")
+        print(f"   ✅ Token matches: {verify_token}")
         return PlainTextResponse(challenge)
     else:
-        print(f"Webhook verification failed. Mode: {mode}, Token match: {token == verify_token}")
+        print(f"\n❌ WEBHOOK VERIFICATION FAILED")
+        print(f"   🎯 Mode: {mode}")
+        print(f"   🔑 Token received: {token}")
+        print(f"   🔑 Token expected: {verify_token}")
+        print(f"   ❌ Token match: {token == verify_token}")
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
@@ -412,8 +418,13 @@ async def webhook_receive(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
     
-    # Log the webhook event
-    print(f"Webhook received: {json.dumps(body, indent=2)}")
+    # Log the webhook event with enhanced visibility
+    print("\n" + "="*60)
+    print(f"🔔 WEBHOOK RECEIVED at {datetime.datetime.utcnow().isoformat()}Z")
+    print("="*60)
+    print(f"📨 Webhook payload:")
+    print(json.dumps(body, indent=2))
+    print("="*60 + "\n")
     
     # Log to file for reviewer inspection
     try:
@@ -488,10 +499,12 @@ async def handle_message_event(message_event):
     message_text = message_event.get("message", {}).get("text", "")
     
     if not sender_id or not message_text:
-        print("Skipping message event - missing sender or text")
+        print("⚠️  Skipping message event - missing sender or text")
         return
     
-    print(f"Message from {sender_id}: {message_text}")
+    print(f"\n💬 MESSAGE RECEIVED:")
+    print(f"   👤 From: {sender_id}")
+    print(f"   📝 Text: {message_text}")
     
     # Send auto-reply (static response for demo)
     auto_reply = "Hi! This is Grace, your AI sales assistant. Thanks for your message! This is an automated demo response during our Instagram app review. Full conversational AI capabilities will be available soon! 🤖✨"
@@ -500,10 +513,12 @@ async def handle_message_event(message_event):
     reply_sent = await send_instagram_reply(sender_id, auto_reply)
     
     if reply_sent:
-        print(f"Auto-reply sent to {sender_id}: {auto_reply}")
+        print(f"✅ AUTO-REPLY SENT to {sender_id}")
+        print(f"   📤 Reply: {auto_reply[:50]}...")
         reply_status = "sent_via_api"
     else:
-        print(f"Auto-reply logged only for {sender_id}: {auto_reply}")
+        print(f"📝 AUTO-REPLY LOGGED ONLY for {sender_id}")
+        print(f"   📤 Reply: {auto_reply[:50]}...")
         reply_status = "logged_only"
     
     # Log the auto-reply for reviewer inspection
