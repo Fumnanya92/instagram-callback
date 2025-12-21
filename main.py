@@ -16,6 +16,8 @@ if os.path.exists('.env'):
 from routes.web import router as web_router
 from routes.api import router as api_router
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 
 app = FastAPI()
 
@@ -25,3 +27,7 @@ app.include_router(web_router)
 
 # Serve static assets from /static
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/flutter/privacy.html")
+async def flutter_privacy():
+    return FileResponse("static/flutter/privacy.html")
