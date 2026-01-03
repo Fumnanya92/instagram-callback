@@ -31,3 +31,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/flutter/privacy.html")
 async def flutter_privacy():
     return FileResponse("static/flutter/privacy.html")
+
+@app.get("/AccesscodeNG/privacy.html")
+async def flutter_privacy():
+    return FileResponse("static/AccesscodeNG/privacy.html")
