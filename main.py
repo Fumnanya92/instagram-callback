@@ -28,14 +28,14 @@ app.include_router(web_router)
 # Serve static assets from /static
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+@app.get("/accesscodeng/privacy")
+async def accesscodeng_privacy_clean():
+    return FileResponse("static/AccesscodeNG/privacy.html")
+
 @app.get("/flutter/privacy.html")
 async def flutter_privacy():
     return FileResponse("static/flutter/privacy.html")
 
 @app.get("/AccesscodeNG/privacy.html")
 async def accesscodeng_privacy():
-    return FileResponse("static/AccesscodeNG/privacy.html")
-
-@app.get("/accesscodeng/privacy")
-async def accesscodeng_privacy_clean():
     return FileResponse("static/AccesscodeNG/privacy.html")
