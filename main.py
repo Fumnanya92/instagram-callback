@@ -35,3 +35,7 @@ async def flutter_privacy():
 @app.get("/AccesscodeNG/privacy.html")
 async def accesscodeng_privacy():
     return FileResponse("static/AccesscodeNG/privacy.html")
+
+@app.get("/accesscodeng/privacy")
+async def accesscodeng_privacy_clean():
+    return FileResponse("static/AccesscodeNG/privacy.html")
