@@ -32,9 +32,17 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def accesscodeng_privacy_clean():
     return FileResponse("static/AccesscodeNG/privacy.html")
 
+@app.get("/accesscodeng/support")
+async def accesscodeng_support():
+    return FileResponse("static/AccesscodeNG/support.html")
+
 @app.get("/flutter/privacy.html")
 async def flutter_privacy():
     return FileResponse("static/flutter/privacy.html")
+
+@app.get("/flutter/support.html")
+async def flutter_support():
+    return FileResponse("static/flutter/support.html")
 
 @app.get("/AccesscodeNG/privacy.html")
 async def accesscodeng_privacy():
