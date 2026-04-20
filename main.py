@@ -15,6 +15,7 @@ if os.path.exists('.env'):
 
 from routes.web import router as web_router
 from routes.api import router as api_router
+from routes.stickers import router as stickers_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -23,7 +24,18 @@ app = FastAPI()
 
 # include routers
 app.include_router(api_router)
+app.include_router(stickers_router)
 app.include_router(web_router)
+
+
+@app.get("/infinity-estate/stickers")
+async def sticker_form():
+    return FileResponse("static/infinity/sticker_form.html")
+
+
+@app.get("/infinity-estate/stickers/admin")
+async def sticker_admin():
+    return FileResponse("static/infinity/sticker_admin.html")
 
 # Serve static assets from /static
 app.mount("/static", StaticFiles(directory="static"), name="static")
