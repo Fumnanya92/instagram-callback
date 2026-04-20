@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(.venv/Scripts/python.exe -m uvicorn main:app --reload --port 8000)",
-      "Bash(.venv/Scripts/python.exe -c ' *)"
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(curl *)"
     ]
   }
 }
