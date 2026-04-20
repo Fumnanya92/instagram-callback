@@ -11,7 +11,7 @@ SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 BUCKET = "sticker-receipts"
 
-_client: Client | None = None
+_client = None
 
 
 def get_supabase() -> Client:
