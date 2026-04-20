@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sticker Admin – Infinity Estate</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--green:#1a5c2e;--gm:#247a3e;--gl:#e8f5ec;--gold:#c9a227;--dark:#0f1f14;--gray:#6b7280;--red:#dc2626;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f4f1;font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+.topbar{background:linear-gradient(135deg,#1a5c2e,#0d3d1e);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.topbar h1{font-family:'Playfair Display',serif;color:#fff;font-size:20px;}
+.topbar .sub{color:rgba(255,255,255,.65);font-size:12px;margin-top:2px;}
+
+.main{max-width:1100px;margin:28px auto;padding:0 16px;}
+
+/* Stat cards */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
+.stat{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.stat .sv{font-size:36px;font-weight:700;color:var(--green);line-height:1;}
+.stat .sl{font-size:12px;color:var(--gray);margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;}
+.stat.warn .sv{color:var(--gold);}
+.stat.danger .sv{color:var(--red);}
+
+/* Progress bar */
+.prog-wrap{background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.prog-head{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--dark);margin-bottom:10px;}
+.prog-bar{height:14px;background:#e5e7eb;border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),#4caf50);transition:width .6s ease;}
+.prog-fill.warn{background:linear-gradient(90deg,var(--gold),#f59e0b);}
+.prog-fill.danger{background:linear-gradient(90deg,var(--red),#f87171);}
+
+/* Controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:center;}
+.search-inp{flex:1;min-width:200px;padding:9px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;}
+.search-inp:focus{border-color:var(--gm);}
+.exp-btn{background:var(--green);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.exp-btn:hover{opacity:.88;}
+
+/* Table */
+.table-wrap{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead{background:var(--gl);}
+th{padding:11px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+td{padding:11px 14px;border-bottom:1px solid #f3f4f6;color:var(--dark);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafcfa;}
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;}
+.badge.transfer{background:#dbeafe;color:#1d4ed8;}
+.badge.pos{background:#f3e8ff;color:#7c3aed;}
+.rcpt-link{color:var(--gm);text-decoration:underline;cursor:pointer;font-size:12px;}
+.empty{padding:40px;text-align:center;color:var(--gray);font-size:14px;}
+
+@media(max-width:600px){
+  th:nth-child(n+5),td:nth-child(n+5){display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>🏷️ Sticker Admin — Infinity Estate</h1>
+    <div class="sub">Manage vehicle sticker registrations and track inventory</div>
+  </div>
+  <a href="/infinity-estate/stickers" style="color:rgba(255,255,255,.7);font-size:13px;text-decoration:none;">← View Form</a>
+</div>
+
+<div class="main">
+
+  <div class="stats">
+    <div class="stat"><div class="sv" id="sTot">—</div><div class="sl">Total Submitted</div></div>
+    <div class="stat"><div class="sv" id="sStick">—</div><div class="sl">Stickers Requested</div></div>
+    <div class="stat warn"><div class="sv" id="sRem">—</div><div class="sl">Stickers Remaining</div></div>
+    <div class="stat"><div class="sv" id="sAmt">—</div><div class="sl">Total Amount (₦)</div></div>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-head">
+      <span>Sticker Inventory</span>
+      <span id="progLabel">—</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="controls">
+    <input class="search-inp" id="srch" placeholder="🔍  Search by name, address, plate…" oninput="renderTable()"/>
+    <button class="exp-btn" onclick="exportCSV()">⬇️ Export CSV</button>
+    <button class="exp-btn" onclick="exportReceiptsInfo()" style="background:#4a90d9;">📁 Receipt List</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Address</th>
+          <th>Plate</th>
+          <th>Stickers</th>
+          <th>Method</th>
+          <th>Pay Name</th>
+          <th>Amount</th>
+          <th>Date</th>
+          <th>Receipt</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" style="display:none;">No submissions yet.</div>
+  </div>
+
+</div>
+
+<script>
+const TOTAL_STICKERS = 98;
+let allData = [];
+
+async function load(){
+  const res = await fetch('/api/stickers/submissions');
+  allData = await res.json();
+  updateStats();
+  renderTable();
+}
+
+function updateStats(){
+  const totalSubs = allData.length;
+  const totalStick = allData.reduce((s,r)=>s+(parseInt(r.sticker_count)||0),0);
+  const remaining = TOTAL_STICKERS - totalStick;
+  const totalAmt = allData.reduce((s,r)=>s+(parseFloat(r.amount_paid)||0),0);
+  document.getElementById('sTot').textContent = totalSubs;
+  document.getElementById('sStick').textContent = totalStick;
+  document.getElementById('sRem').textContent = Math.max(0,remaining);
+  document.getElementById('sAmt').textContent = '₦'+totalAmt.toLocaleString();
+
+  const pct = Math.min(100,(totalStick/TOTAL_STICKERS)*100);
+  const fill = document.getElementById('progFill');
+  fill.style.width = pct+'%';
+  fill.className = 'prog-fill'+(pct>=90?' danger':pct>=70?' warn':'');
+  document.getElementById('progLabel').textContent = totalStick+' / '+TOTAL_STICKERS+' used';
+}
+
+function renderTable(){
+  const q = document.getElementById('srch').value.toLowerCase();
+  const filtered = allData.filter(r=>
+    (r.full_name||'').toLowerCase().includes(q)||
+    (r.address||'').toLowerCase().includes(q)||
+    (r.plate_number||'').toLowerCase().includes(q)||
+    (r.phone||'').includes(q)
+  );
+  const tbody = document.getElementById('tbody');
+  document.getElementById('emptyMsg').style.display = filtered.length?'none':'block';
+  tbody.innerHTML = filtered.map((r,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${r.full_name||''}</strong></td>
+      <td>${r.phone||''}</td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.address||''}</td>
+      <td>${r.plate_number||''}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green);">${r.sticker_count||0}</td>
+      <td><span class="badge ${(r.payment_method||'').toLowerCase()}">${r.payment_method||''}</span></td>
+      <td>${r.payment_name||''}</td>
+      <td>₦${parseFloat(r.amount_paid||0).toLocaleString()}</td>
+      <td>${r.payment_date||''}</td>
+      <td>${r.receipt_filename?`<a class="rcpt-link" href="/api/stickers/receipt/${r.id}" target="_blank">View</a>`:'—'}</td>
+      <td style="color:var(--gray);font-size:12px;">${r.submitted_at?r.submitted_at.substring(0,16).replace('T',' '):''}</td>
+    </tr>`).join('');
+}
+
+function exportCSV(){
+  const headers = ['#','Name','Phone','Address','Owner Name','Plate','Stickers','Method','Pay Name','Amount','Pay Date','Receipt File','Submitted'];
+  const rows = allData.map((r,i)=>[
+    i+1,r.full_name,r.phone,r.address,r.owner_name,r.plate_number,
+    r.sticker_count,r.payment_method,r.payment_name,r.amount_paid,
+    r.payment_date,r.receipt_filename,r.submitted_at
+  ].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`));
+  const csv = [headers.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='infinity_stickers_'+new Date().toISOString().substring(0,10)+'.csv';
+  a.click();
+}
+
+function exportReceiptsInfo(){
+  alert('Receipts are stored on the server. Download them from /api/stickers/receipts-zip (ask your developer to enable this), or view each one individually via the "View" links in the table.');
+}
+
+load();
+setInterval(load, 30000); // refresh every 30s
+</script>
+</body>
+</html>

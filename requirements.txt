@@ -4,5 +4,4 @@ requests
 httpx
 jinja2
 python-dotenv
-httpx
-jinja2
+python-multipart
