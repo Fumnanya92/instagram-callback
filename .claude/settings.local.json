@@ -3,7 +3,11 @@
     "allow": [
       "Bash(.venv/Scripts/python.exe -m uvicorn main:app --reload --port 8000)",
       "Bash(.venv/Scripts/python.exe -c ' *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(pip install *)",
+      "Bash(supabase --version)",
+      "Bash(supabase projects *)",
+      "Bash(npx supabase *)"
     ]
   }
 }

@@ -68,7 +68,7 @@ async def submit_sticker(
         "payment_date": payment_date,
         "receipt_filename": receipt_filename,
         "receipt_url": receipt_url,
-        "submitted_at": datetime.datetime.utcnow().isoformat() + "Z",
+        "submitted_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
 
     sb.table("sticker_submissions").insert(entry).execute()
@@ -119,7 +119,7 @@ async def manual_add(request: Request):
         "payment_date": body.get("payment_date", ""),
         "receipt_filename": "",
         "receipt_url": "",
-        "submitted_at": datetime.datetime.utcnow().isoformat() + "Z",
+        "submitted_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "added_by_admin": True,
     }
 
