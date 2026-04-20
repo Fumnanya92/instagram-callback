@@ -16,3 +16,7 @@ venv/
 # Misc
 .DS_Store
 estate_full_20260420_141125.xlsx
+
+# Sticker submission data — stored on Render persistent disk, not in git
+data/sticker_submissions.json
+data/sticker_receipts/
