@@ -86,7 +86,7 @@ def get_submissions():
 @router.patch("/submission/{submission_id}")
 async def update_submission(submission_id: str, request: Request):
     body = await request.json()
-    allowed = {"sticker_count", "plate_number", "amount_paid", "payment_name", "payment_method", "payment_date", "phone", "address", "owner_name"}
+    allowed = {"sticker_count", "plate_number", "amount_paid", "payment_name", "payment_method", "payment_date", "phone", "address", "owner_name", "collected", "collected_at"}
     updates = {k: v for k, v in body.items() if k in allowed}
     if not updates:
         raise HTTPException(status_code=400, detail="No valid fields to update")
@@ -96,6 +96,21 @@ async def update_submission(submission_id: str, request: Request):
     if not result.data:
         raise HTTPException(status_code=404, detail="Submission not found")
     return JSONResponse({"status": "ok"})
+
+
+@router.post("/submission/{submission_id}/toggle-collected")
+async def toggle_collected(submission_id: str):
+    sb = get_supabase()
+    row = sb.table("sticker_submissions").select("collected").eq("id", submission_id).maybe_single().execute()
+    if not row.data:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    new_state = not bool(row.data.get("collected"))
+    updates = {
+        "collected": new_state,
+        "collected_at": datetime.datetime.now(datetime.timezone.utc).isoformat() if new_state else None,
+    }
+    sb.table("sticker_submissions").update(updates).eq("id", submission_id).execute()
+    return JSONResponse({"status": "ok", "collected": new_state})
 
 
 @router.post("/manual-add")

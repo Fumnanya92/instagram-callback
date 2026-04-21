@@ -17,7 +17,8 @@
       "Bash(python -m json.tool)",
       "Bash(python -c ' *)",
       "Bash(start *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }

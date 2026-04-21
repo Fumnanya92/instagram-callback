@@ -6,11 +6,12 @@
 <title>Sticker Admin – Infinity Estate</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root{--green:#1a5c2e;--gm:#247a3e;--gl:#e8f5ec;--gold:#c9a227;--dark:#0f1f14;--gray:#6b7280;--red:#dc2626;}
+:root{--green:#1a5c2e;--gm:#247a3e;--gl:#e8f5ec;--gold:#c9a227;--dark:#0f1f14;--gray:#6b7280;--red:#dc2626;--collected:#0ea5e9;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#f0f4f1;font-family:'DM Sans',sans-serif;min-height:100vh;}
 
-.gate{position:fixed;inset:0;background:linear-gradient(135deg,#1a5c2e,#0d3d1e);z-index:9999;display:flex;align-items:center;justify-content:center;}
+/* ── GATE ── */
+.gate{position:fixed;inset:0;background:linear-gradient(135deg,#1a5c2e,#0d3d1e);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
 .gate-box{background:#fff;border-radius:16px;padding:40px 32px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .gate-box .lock{font-size:40px;margin-bottom:12px;}
 .gate-box h2{font-family:'Playfair Display',serif;color:var(--dark);font-size:22px;margin-bottom:6px;}
@@ -21,60 +22,83 @@ body{background:#f0f4f1;font-family:'DM Sans',sans-serif;min-height:100vh;}
 .gate-btn:hover{opacity:.9;}
 .gate-err{color:var(--red);font-size:13px;margin-top:8px;display:none;}
 
-.topbar{background:linear-gradient(135deg,#1a5c2e,#0d3d1e);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-.topbar h1{font-family:'Playfair Display',serif;color:#fff;font-size:20px;}
-.topbar .sub{color:rgba(255,255,255,.65);font-size:12px;margin-top:2px;}
+/* ── TOPBAR ── */
+.topbar{background:linear-gradient(135deg,#1a5c2e,#0d3d1e);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.topbar h1{font-family:'Playfair Display',serif;color:#fff;font-size:17px;}
+.topbar .sub{color:rgba(255,255,255,.65);font-size:11px;margin-top:2px;}
+.topbar a{color:rgba(255,255,255,.7);font-size:12px;text-decoration:none;white-space:nowrap;}
 
-.main{max-width:1100px;margin:28px auto;padding:0 16px;}
+.main{max-width:1100px;margin:20px auto;padding:0 12px;}
 
-/* Stat cards */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
-.stat{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
-.stat .sv{font-size:36px;font-weight:700;color:var(--green);line-height:1;}
-.stat .sl{font-size:12px;color:var(--gray);margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;}
+/* ── STAT CARDS ── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+.stat{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.stat .sv{font-size:30px;font-weight:700;color:var(--green);line-height:1;}
+.stat .sl{font-size:11px;color:var(--gray);margin-top:5px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;}
 .stat.warn .sv{color:var(--gold);}
 .stat.danger .sv{color:var(--red);}
+.stat.collected-stat .sv{color:var(--collected);}
 
-/* Progress bar */
-.prog-wrap{background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+/* ── PROGRESS ── */
+.prog-wrap{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
 .prog-head{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--dark);margin-bottom:10px;}
-.prog-bar{height:14px;background:#e5e7eb;border-radius:99px;overflow:hidden;}
+.prog-bar{height:12px;background:#e5e7eb;border-radius:99px;overflow:hidden;}
 .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),#4caf50);transition:width .6s ease;}
 .prog-fill.warn{background:linear-gradient(90deg,var(--gold),#f59e0b);}
 .prog-fill.danger{background:linear-gradient(90deg,var(--red),#f87171);}
 
-/* Controls */
-.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:center;}
-.search-inp{flex:1;min-width:200px;padding:9px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;}
+/* ── CONTROLS ── */
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;}
+.search-inp{flex:1;min-width:160px;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;}
 .search-inp:focus{border-color:var(--gm);}
-.exp-btn{background:var(--green);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.filter-sel{padding:9px 10px;border:1.5px solid #d1d5db;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:#fff;cursor:pointer;}
+.filter-sel:focus{border-color:var(--gm);}
+.exp-btn{background:var(--green);color:#fff;border:none;padding:9px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;}
 .exp-btn:hover{opacity:.88;}
 
-/* Table */
-.table-wrap{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
+/* ── TABLE ── */
+.table-wrap{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:700px;}
 thead{background:var(--gl);}
-th{padding:11px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
-td{padding:11px 14px;border-bottom:1px solid #f3f4f6;color:var(--dark);vertical-align:middle;}
+th{padding:10px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid #f3f4f6;color:var(--dark);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#fafcfa;}
-.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;}
+tr.row-collected td{background:#f0f9ff;}
+tr.row-collected:hover td{background:#e0f2fe;}
+
+.badge{display:inline-block;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;}
 .badge.transfer{background:#dbeafe;color:#1d4ed8;}
 .badge.pos{background:#f3e8ff;color:#7c3aed;}
+.badge.yes{background:#dcfce7;color:#166534;}
+.badge.no{background:#fee2e2;color:#991b1b;}
+
 .rcpt-link{color:var(--gm);text-decoration:underline;cursor:pointer;font-size:12px;}
 .empty{padding:40px;text-align:center;color:var(--gray);font-size:14px;}
+.admin-badge{display:inline-block;background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 6px;border-radius:99px;margin-left:4px;}
 
-@media(max-width:600px){
-  th:nth-child(n+5),td:nth-child(n+5){display:none;}
-}
+/* action buttons */
+.action-cell{display:flex;gap:5px;flex-wrap:wrap;}
+.edit-btn{background:none;border:1px solid #d1d5db;border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--dark);white-space:nowrap;}
+.edit-btn:hover{border-color:var(--gm);color:var(--gm);}
+.collect-btn{border:none;border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600;}
+.collect-btn.not-collected{background:#dcfce7;color:#166534;}
+.collect-btn.not-collected:hover{background:#bbf7d0;}
+.collect-btn.is-collected{background:#fee2e2;color:#991b1b;}
+.collect-btn.is-collected:hover{background:#fecaca;}
 
-/* Modals */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;background:#1a5c2e;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);z-index:5000;max-width:280px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.sale{background:linear-gradient(135deg,#166534,#15803d);}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
 .overlay.open{display:flex;}
-.modal{background:#fff;border-radius:14px;padding:28px 24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
-.modal h3{font-family:'Playfair Display',serif;color:var(--dark);font-size:18px;margin-bottom:4px;}
-.modal .msub{color:var(--gray);font-size:12px;margin-bottom:20px;}
-.mfield{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.modal{background:#fff;border-radius:14px;padding:24px 20px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:auto;}
+.modal h3{font-family:'Playfair Display',serif;color:var(--dark);font-size:17px;margin-bottom:4px;}
+.modal .msub{color:var(--gray);font-size:12px;margin-bottom:18px;}
+.mfield{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
 .mfield label{font-size:12px;font-weight:600;color:var(--dark);}
 .mfield input,.mfield select{padding:9px 12px;border:1.5px solid #d1d5db;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;}
 .mfield input:focus,.mfield select:focus{border-color:var(--gm);}
@@ -83,13 +107,25 @@ tr:hover td{background:#fafcfa;}
 .mbtn.save{background:var(--green);color:#fff;}
 .mbtn.save:hover{opacity:.9;}
 .mbtn.cancel{background:#f3f4f6;color:var(--dark);}
-.edit-btn{background:none;border:1px solid #d1d5db;border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;color:var(--dark);}
-.edit-btn:hover{border-color:var(--gm);color:var(--gm);}
-.admin-badge{display:inline-block;background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 6px;border-radius:99px;margin-left:4px;}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .topbar{padding:12px 14px;}
+  .topbar h1{font-size:15px;}
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .stat .sv{font-size:26px;}
+  .controls{gap:6px;}
+  .search-inp{min-width:0;width:100%;}
+  .exp-btn{padding:8px 10px;font-size:12px;}
+  .table-wrap{border-radius:8px;}
+  table{min-width:600px;}
+  th,td{padding:8px 10px;}
+}
 </style>
 </head>
 <body>
 
+<!-- Gate -->
 <div class="gate" id="gate">
   <div class="gate-box">
     <div class="lock">🔐</div>
@@ -101,23 +137,28 @@ tr:hover td{background:#fafcfa;}
   </div>
 </div>
 
+<!-- Topbar -->
 <div class="topbar">
   <div>
     <h1>🏷️ Sticker Admin — Infinity Estate</h1>
-    <div class="sub">Manage vehicle sticker registrations and track inventory</div>
+    <div class="sub">Manage vehicle sticker registrations</div>
   </div>
-  <a href="/infinity-estate/stickers" style="color:rgba(255,255,255,.7);font-size:13px;text-decoration:none;">← View Form</a>
+  <a href="/infinity-estate/stickers">← View Form</a>
 </div>
 
 <div class="main">
 
+  <!-- Stats -->
   <div class="stats">
     <div class="stat"><div class="sv" id="sTot">—</div><div class="sl">Total Submitted</div></div>
     <div class="stat"><div class="sv" id="sStick">—</div><div class="sl">Stickers Requested</div></div>
-    <div class="stat warn"><div class="sv" id="sRem">—</div><div class="sl">Stickers Remaining</div></div>
-    <div class="stat"><div class="sv" id="sAmt">—</div><div class="sl">Total Amount (₦)</div></div>
+    <div class="stat warn"><div class="sv" id="sRem">—</div><div class="sl">Remaining</div></div>
+    <div class="stat collected-stat"><div class="sv" id="sCollected">—</div><div class="sl">Collected</div></div>
+    <div class="stat danger"><div class="sv" id="sPending">—</div><div class="sl">Not Yet Collected</div></div>
+    <div class="stat"><div class="sv" id="sAmt">—</div><div class="sl">Total (₦)</div></div>
   </div>
 
+  <!-- Progress -->
   <div class="prog-wrap">
     <div class="prog-head">
       <span>Sticker Inventory</span>
@@ -126,13 +167,19 @@ tr:hover td{background:#fafcfa;}
     <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
   </div>
 
+  <!-- Controls -->
   <div class="controls">
-    <input class="search-inp" id="srch" placeholder="🔍  Search by name, address, plate…" oninput="renderTable()"/>
-    <button class="exp-btn" onclick="exportCSV()">⬇️ Export CSV</button>
-    <button class="exp-btn" onclick="exportReceiptsInfo()" style="background:#4a90d9;">📁 Receipt List</button>
-    <button class="exp-btn" onclick="openQuickAdd()" style="background:var(--gold);color:var(--dark);">➕ Quick Add</button>
+    <input class="search-inp" id="srch" placeholder="🔍 Search name, address, plate…" oninput="renderTable()"/>
+    <select class="filter-sel" id="filterStatus" onchange="renderTable()">
+      <option value="all">All Entries</option>
+      <option value="pending">Not Collected</option>
+      <option value="collected">Collected</option>
+    </select>
+    <button class="exp-btn" onclick="exportCSV()">⬇️ CSV</button>
+    <button class="exp-btn" onclick="openQuickAdd()" style="background:var(--gold);color:var(--dark);">➕ Add</button>
   </div>
 
+  <!-- Table -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -142,22 +189,24 @@ tr:hover td{background:#fafcfa;}
           <th>Phone</th>
           <th>Address</th>
           <th>Plate</th>
-          <th>Stickers</th>
+          <th>Qty</th>
           <th>Method</th>
-          <th>Pay Name</th>
           <th>Amount</th>
           <th>Date</th>
           <th>Receipt</th>
-          <th>Submitted</th>
-          <th>Edit</th>
+          <th>Status</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
-    <div class="empty" id="emptyMsg" style="display:none;">No submissions yet.</div>
+    <div class="empty" id="emptyMsg" style="display:none;">No submissions found.</div>
   </div>
 
 </div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <!-- Edit Modal -->
 <div class="overlay" id="editOverlay" onclick="if(event.target===this)closeEdit()">
@@ -181,7 +230,7 @@ tr:hover td{background:#fafcfa;}
 <div class="overlay" id="addOverlay" onclick="if(event.target===this)closeAdd()">
   <div class="modal">
     <h3>Quick Add — Admin Entry</h3>
-    <div class="msub">Add stickers for a resident without them filling the form.</div>
+    <div class="msub">Add a resident without them filling the form.</div>
     <div class="mfield"><label>Full Name *</label><input type="text" id="aName" placeholder="Resident name"/></div>
     <div class="mfield"><label>Phone</label><input type="tel" id="aPhone" placeholder="Phone number"/></div>
     <div class="mfield"><label>Address *</label><input type="text" id="aAddr" placeholder="House address"/></div>
@@ -202,10 +251,54 @@ tr:hover td{background:#fafcfa;}
 <script>
 const TOTAL_STICKERS = 98;
 let allData = [];
+let prevCount = -1;
 
+// ── SOUND ALERT (Web Audio API – no file needed) ──
+function playSaleSound(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.13;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.35, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    });
+  } catch(e){}
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg, type=''){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.className='toast'; }, 4000);
+}
+
+// ── LOAD ──
 async function load(){
   const res = await fetch('/api/stickers/submissions');
-  allData = await res.json();
+  const newData = await res.json();
+
+  // New payment alert
+  if(prevCount >= 0 && newData.length > prevCount){
+    const diff = newData.length - prevCount;
+    playSaleSound();
+    showToast('🎉 ' + diff + ' new payment' + (diff>1?'s':'') + ' just came in!', 'sale');
+  }
+  prevCount = newData.length;
+
+  allData = newData;
   updateStats();
   renderTable();
 }
@@ -215,10 +308,15 @@ function updateStats(){
   const totalStick = allData.reduce((s,r)=>s+(parseInt(r.sticker_count)||0),0);
   const remaining = TOTAL_STICKERS - totalStick;
   const totalAmt = allData.reduce((s,r)=>s+(parseFloat(r.amount_paid)||0),0);
+  const collected = allData.filter(r=>r.collected).length;
+  const pending = totalSubs - collected;
+
   document.getElementById('sTot').textContent = totalSubs;
   document.getElementById('sStick').textContent = totalStick;
   document.getElementById('sRem').textContent = Math.max(0,remaining);
   document.getElementById('sAmt').textContent = '₦'+totalAmt.toLocaleString();
+  document.getElementById('sCollected').textContent = collected;
+  document.getElementById('sPending').textContent = pending;
 
   const pct = Math.min(100,(totalStick/TOTAL_STICKERS)*100);
   const fill = document.getElementById('progFill');
@@ -229,48 +327,81 @@ function updateStats(){
 
 function renderTable(){
   const q = document.getElementById('srch').value.toLowerCase();
-  const filtered = allData.filter(r=>
+  const statusFilter = document.getElementById('filterStatus').value;
+
+  let filtered = allData.filter(r=>
     (r.full_name||'').toLowerCase().includes(q)||
     (r.address||'').toLowerCase().includes(q)||
     (r.plate_number||'').toLowerCase().includes(q)||
     (r.phone||'').includes(q)
   );
+
+  if(statusFilter === 'collected') filtered = filtered.filter(r=>r.collected);
+  if(statusFilter === 'pending') filtered = filtered.filter(r=>!r.collected);
+
   const tbody = document.getElementById('tbody');
   document.getElementById('emptyMsg').style.display = filtered.length?'none':'block';
-  tbody.innerHTML = filtered.map((r,i)=>`
-    <tr>
+
+  tbody.innerHTML = filtered.map((r,i)=>{
+    const isCollected = !!r.collected;
+    return `
+    <tr class="${isCollected?'row-collected':''}">
       <td>${i+1}</td>
       <td><strong>${r.full_name||''}</strong>${r.added_by_admin?'<span class="admin-badge">admin</span>':''}</td>
       <td>${r.phone||''}</td>
-      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.address||''}</td>
+      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${r.address||''}">${r.address||''}</td>
       <td>${r.plate_number||''}</td>
       <td style="text-align:center;font-weight:700;color:var(--green);">${r.sticker_count||0}</td>
       <td><span class="badge ${(r.payment_method||'').toLowerCase()}">${r.payment_method||''}</span></td>
-      <td>${r.payment_name||''}</td>
       <td>₦${parseFloat(r.amount_paid||0).toLocaleString()}</td>
-      <td>${r.payment_date||''}</td>
+      <td style="white-space:nowrap;">${r.payment_date||''}</td>
       <td>${r.receipt_filename?`<a class="rcpt-link" href="/api/stickers/receipt/${r.id}" target="_blank">View</a>`:'—'}</td>
-      <td style="color:var(--gray);font-size:12px;">${r.submitted_at?r.submitted_at.substring(0,16).replace('T',' '):''}</td>
-      <td><button class="edit-btn" onclick="openEdit('${r.id}')">✏️ Edit</button></td>
-    </tr>`).join('');
+      <td><span class="badge ${isCollected?'yes':'no'}">${isCollected?'✓ Collected':'Pending'}</span></td>
+      <td>
+        <div class="action-cell">
+          <button class="edit-btn" onclick="openEdit('${r.id}')">✏️ Edit</button>
+          <button class="collect-btn ${isCollected?'is-collected':'not-collected'}" onclick="toggleCollected('${r.id}')">
+            ${isCollected?'↩ Undo':'✓ Collected'}
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── TOGGLE COLLECTED ──
+async function toggleCollected(id){
+  const btn = event.currentTarget;
+  btn.disabled = true;
+  const res = await fetch('/api/stickers/submission/'+id+'/toggle-collected', {method:'POST'});
+  if(res.ok){
+    const data = await res.json();
+    const r = allData.find(x=>x.id===id);
+    if(r){
+      r.collected = data.collected;
+      r.collected_at = data.collected ? new Date().toISOString() : null;
+    }
+    updateStats();
+    renderTable();
+    showToast(data.collected ? '✓ Marked as collected' : 'Marked as pending');
+  } else {
+    btn.disabled = false;
+    alert('Failed to update. Please try again.');
+  }
 }
 
 function exportCSV(){
-  const headers = ['#','Name','Phone','Address','Owner Name','Plate','Stickers','Method','Pay Name','Amount','Pay Date','Receipt File','Submitted'];
+  const headers = ['#','Name','Phone','Address','Plate','Stickers','Method','Pay Name','Amount','Pay Date','Collected','Receipt File','Submitted'];
   const rows = allData.map((r,i)=>[
-    i+1,r.full_name,r.phone,r.address,r.owner_name,r.plate_number,
+    i+1,r.full_name,r.phone,r.address,r.plate_number,
     r.sticker_count,r.payment_method,r.payment_name,r.amount_paid,
-    r.payment_date,r.receipt_filename,r.submitted_at
+    r.payment_date,r.collected?'Yes':'No',r.receipt_filename,r.submitted_at
   ].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`));
   const csv = [headers.join(','),...rows.map(r=>r.join(','))].join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download='infinity_stickers_'+new Date().toISOString().substring(0,10)+'.csv';
   a.click();
-}
-
-function exportReceiptsInfo(){
-  alert('Receipts are stored on the server. Download them from /api/stickers/receipts-zip (ask your developer to enable this), or view each one individually via the "View" links in the table.');
 }
 
 // ── EDIT MODAL ──
@@ -296,7 +427,7 @@ async function saveEdit(){
     payment_method: document.getElementById('eMethod').value,
   };
   const res = await fetch('/api/stickers/submission/'+editingId, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-  if(res.ok){ closeEdit(); load(); } else { alert('Save failed. Please try again.'); }
+  if(res.ok){ closeEdit(); load(); showToast('Changes saved'); } else { alert('Save failed. Please try again.'); }
 }
 
 // ── QUICK ADD MODAL ──
@@ -318,12 +449,16 @@ async function saveAdd(){
     return;
   }
   const res = await fetch('/api/stickers/manual-add', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-  if(res.ok){ closeAdd(); load(); ['aName','aPhone','aAddr','aPlate','aCount','aAmount','aDate'].forEach(id=>document.getElementById(id).value=''); }
-  else { alert('Failed to add entry. Please try again.'); }
+  if(res.ok){
+    closeAdd();
+    ['aName','aPhone','aAddr','aPlate','aCount','aAmount','aDate'].forEach(id=>document.getElementById(id).value='');
+    load();
+    showToast('Entry added');
+  } else { alert('Failed to add entry. Please try again.'); }
 }
 
+// ── AUTH ──
 const ADMIN_PASSWORD = 'infinity2026';
-
 function checkPass(){
   const val = document.getElementById('gatePass').value;
   if(val === ADMIN_PASSWORD){
